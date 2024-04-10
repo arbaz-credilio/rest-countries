@@ -1,12 +1,18 @@
 <template>
   <navbar-vue @color-mode="(param) => (mode = param)" />
   <div class="inputs">
-    <inputs-vue
-      @search-countries="(input) => (searchInput = input)"
-      :regions="regions"
-      :subregions="subregion"
-      :mode="mode"
-      @sort-by="(param) => (sortBy = param)"
+    <input
+      type="text"
+      v-model="searchInput"
+      @input="$emit('search-countries', searchInput)"
+      :class="mode && 'dark-input'"
+    />
+    <filter-vue
+      :filterName="'Region'"
+      :vModelValue="selectedRegion"
+      :emit="'region-filter'"
+      :emitValue="selectedRegion"
+      :options="regions"
       @region-filter="
         (param) => {
           selectedRegion = param;
@@ -14,13 +20,35 @@
           handleSubregion(selectedRegion);
         }
       "
-      @subregion-filter="(param) => (selectedSubRegion = param)"
-      :currencies="currencies"
+    />
+    <filter-vue
+      :filterName="'Sub Region'"
+      :emit="'subregion-filter'"
+      :vModelValue="selectedSubRegion"
+      :options="subregion"
+      @subregion-filter="
+        (param) => {
+          selectedSubRegion = param;
+        }
+      "
+    />
+    <filter-vue
+      :filterName="'sort by'"
+      :emit="'sort-by'"
+      :options="sorts"
+      :vModelValue="sortBy"
+      @sort-by="(param) => (sortBy = param)"
+    />
+    <filter-vue
+      :filterName="'select currency'"
+      :emit="'seletced-currency'"
+      :options="currencies"
+      :vModelValue="selectedCurrency"
       @seletced-currency="(param) => (selectedCurrency = param)"
     />
   </div>
   <div class="countries" :class="mode && 'dark-countries'">
-    <countries-vue
+    <Countries
       :mode="mode"
       :countries="countries"
       :searchInput="searchInput"
@@ -28,68 +56,54 @@
       :selectedSubRegion="selectedSubRegion"
       :sortBy="sortBy"
       :selectedCurrency="selectedCurrency"
-
     />
   </div>
 </template>
 
-<script>
-import CountriesVue from "./components/Countries.vue";
-import InputsVue from "./components/Inputs.vue";
+<script setup>
+import Countries from "./components/CountriesVue.vue";
 import axios from "axios";
-import NavbarVue from "./components/Navbar.vue";
-export default {
-  name: "App",
-  data() {
-    return {
-      mode: false,
-      countries: [],
-      searchInput: "",
-      selectedRegion: "",
-      regions: ["Asia", "Africa", "Americas", "Europe", "Oceania", "Antarctic"],
-      subregion: [],
-      selectedSubRegion: "",
-      sortBy: "",
-      currencies: [],
-      selectedCurrency: "",
-    };
-  },
-  components: {
-    NavbarVue,
-    CountriesVue,
-    InputsVue,
-  },
-  methods: {
-    async getAllCountries() {
-      const response = await axios.get("https://restcountries.com/v3.1/all");
-      this.countries = response.data;
-      this.currencies = [
-        ...new Set(
-          this.countries.map((country) => {
-            return (
-              country?.currencies &&
-              country?.currencies !== "" &&
-              Object.values(country?.currencies)[0]?.name
-            );
-          })
-        ),
-      ];
-    },
-    handleSubregion(region) {
-      this.subregion = [];
-      this.countries.forEach((country) => {
-        if (country?.region === region) {
-          if (!this.subregion.includes(country?.subregion)) {
-            this.subregion.push(country?.subregion);
-          }
-        }
-      });
-    },
-  },
-  mounted() {
-    this.getAllCountries();
-  },
+import NavbarVue from "./components/NavbarVue.vue";
+import FilterVue from "./components/FilterVue.vue";
+import { onMounted, ref } from "vue";
+let mode = ref(false);
+let countries = ref([]);
+let searchInput = ref("");
+let selectedRegion = ref("");
+let regions = ["Asia", "Africa", "Americas", "Europe", "Oceania", "Antarctic"];
+let subregion = ref([]);
+let selectedSubRegion = ref("");
+let sorts = ref(["population-asc", "population-desc", "area-asc", "area-desc"]);
+let sortBy = ref("");
+let currencies = ref([]);
+let selectedCurrency = ref("");
+const handleSubregion = (region) => {
+  subregion.value = [];
+  countries.value.forEach((country) => {
+    if (country?.region === region) {
+      if (!subregion.value.includes(country?.subregion)) {
+        subregion.value.push(country?.subregion);
+      }
+    }
+  });
 };
+const getAllCountries = async () => {
+  const response = await axios.get("https://restcountries.com/v3.1/all");
+  countries.value = response.data;
+  currencies = [
+    ...new Set(
+      countries.value.map((country) => {
+        return (
+          country?.currencies &&
+          country?.currencies !== "" &&
+          Object.values(country?.currencies)[0]?.name
+        );
+      })
+    ),
+  ];
+};
+onMounted(() => getAllCountries());
+
 </script>
 
 <style>

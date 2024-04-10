@@ -5,7 +5,7 @@
     @input="$emit('search-countries', searchInput)"
     :class="mode && 'dark-input'"
   />
-  <select
+  <!-- <select
     v-model="selectedRegion"
     @change="$emit('region-filter', selectedRegion)"
   >
@@ -13,10 +13,9 @@
     <option v-for="region in regions" :key="region" :value="region">
       {{ region }}
     </option>
-  </select>
-  <select
-    name="subregion"
-    id="subregion"
+  </select> -->
+
+  <!-- <select
     v-model="selectedSubRegion"
     @change="$emit('subregion-filter', selectedSubRegion)"
   >
@@ -24,22 +23,15 @@
     <option v-for="subregion in subregions" :value="subregion" :key="subregion">
       {{ subregion }}
     </option>
-  </select>
-  <select
-    name="sort"
-    id="sort"
-    v-model="sortBy"
-    @change="$emit('sort-by', sortBy)"
-  >
+  </select> -->
+  <!-- <select v-model="sortBy" @change="$emit('sort-by', sortBy)">
     <option value="">sort by</option>
     <option value="population-asc">ascending by population</option>
     <option value="population-desc">descending by population</option>
     <option value="area-asc">ascending by area</option>
     <option value="area-desc">descending by area</option>
-  </select>
-  <select
-    name="currencies"
-    id="currencies"
+  </select> -->
+  <!-- <select
     v-model="selectedCurrency"
     @change="$emit('seletced-currency', selectedCurrency)"
   >
@@ -47,9 +39,17 @@
     <option v-for="currency in currencies" :key="currency" :value="currency">
       {{ currency }}
     </option>
-  </select>
+  </select> -->
 </template>
-<script>
+<script setup>
+import { defineProps, ref } from "vue";
+const props = defineProps({
+  regions: Array,
+  subregions: Array,
+  mode: Boolean,
+  currencies: Array,
+});
+const searchInput = ref("");
 export default {
   name: "InputsVue",
   data() {
